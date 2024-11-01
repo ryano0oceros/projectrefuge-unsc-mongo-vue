@@ -74,7 +74,7 @@ body {
   font-family: 'Mona Sans', sans-serif;
   background-color: #f9f9f9;
   color: #333;
-  background-image: url('@/assets/LightB.webp');
+  background-image: url('/public/LightB.webp');
   background-size: 5120px 1874px;
   background-position: center;
   background-repeat: no-repeat;
