@@ -1,13 +1,18 @@
 <template>
   <div id="app">
-    <h1>ICRC UNSC Initiative</h1>
-    <form @submit.prevent="handleSearch">
-      <input type="text" v-model="searchQuery" placeholder="Enter search query" />
+    <h1>ICRC UNSC</h1>
+    <form @submit.prevent="search">
+      <input type="text" v-model="query" placeholder="Enter search query" />
       <button type="submit">Search</button>
     </form>
-    <div v-if="searchResult">
+    <div v-if="results.length">
       <h2>Search Results</h2>
-      <pre>{{ searchResult }}</pre>
+      <ul>
+        <li v-for="result in results" :key="result._id">{{ result.title }}</li>
+      </ul>
+    </div>
+    <div v-else-if="searched">
+      <p>No results found.</p>
     </div>
   </div>
 </template>
@@ -16,65 +21,28 @@
 import axios from 'axios';
 
 export default {
-  name: 'App',
   data() {
     return {
-      searchQuery: '',
-      searchResult: null,
+      query: '',
+      results: [],
+      searched: false,
     };
   },
   methods: {
-    async handleSearch() {
-      try {
-        const response = await axios.post('https://your-mongodb-atlas-url.com/search', {
-          query: this.searchQuery,
+    search() {
+      axios.get(`http://localhost:3000/search?q=${this.query}`)
+        .then(response => {
+          this.results = response.data;
+          this.searched = true;
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
         });
-        this.searchResult = response.data;
-      } catch (error) {
-        console.error('Error fetching search results:', error);
-      }
     },
   },
 };
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-
-form {
-  margin-bottom: 20px;
-}
-
-input {
-  padding: 10px;
-  font-size: 16px;
-  width: 300px;
-  margin-right: 10px;
-}
-
-button {
-  padding: 10px 20px;
-  font-size: 16px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #45a049;
-}
-
-pre {
-  text-align: left;
-  background-color: #f8f8f8;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
+/* Add your styles here */
 </style>
