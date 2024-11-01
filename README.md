@@ -3,90 +3,95 @@ Frontend for ICRC UNSC initiative
 
 ## Setup Instructions to Host on AWS Amplify
 
-### Step 1: Create a Serverless Function
+### Step 1: Create a Cloudformation Template
 
-1. Create a new directory for your Lambda function:
+1. Create a new directory for your Cloudformation template:
    ```sh
-   mkdir lambda-function
-   cd lambda-function
+   mkdir cloudformation-template
+   cd cloudformation-template
    ```
 
-2. Initialize a new Node.js project:
-   ```sh
-   npm init -y
-   ```
-
-3. Install necessary dependencies:
-   ```sh
-   npm install express serverless-http mongodb
-   ```
-
-4. Create a `serverless.yml` file with the following content:
+2. Create a `cloudformation-template.yml` file with the following content:
    ```yaml
-   service: projectrefuge-unsc-mongo-vue
-
-   provider:
-     name: aws
-     runtime: nodejs14.x
-     region: us-east-1
-
-   functions:
-     app:
-       handler: src/server.handler
-       events:
-         - http:
-             path: /
-             method: any
-         - http:
-             path: /{proxy+}
-             method: any
-
-   plugins:
-     - serverless-offline
-
-   custom:
-     serverless-offline:
-       port: 3000
-
-   resources:
-     Resources:
-       MongoDBAccessRole:
-         Type: AWS::IAM::Role
-         Properties:
-           AssumeRolePolicyDocument:
-             Version: '2012-10-17'
-             Statement:
-               - Effect: Allow
-                 Principal:
-                   Service: lambda.amazonaws.com
-                 Action: sts:AssumeRole
-           Policies:
-             - PolicyName: MongoDBAccessPolicy
-               PolicyDocument:
-                 Version: '2012-10-17'
-                 Statement:
-                   - Effect: Allow
-                     Action:
-                       - "secretsmanager:GetSecretValue"
-                     Resource: "*"
+   AWSTemplateFormatVersion: '2010-09-09'
+   Resources:
+     LambdaExecutionRole:
+       Type: 'AWS::IAM::Role'
+       Properties:
+         AssumeRolePolicyDocument:
+           Version: '2012-10-17'
+           Statement:
+             - Effect: Allow
+               Principal:
+                 Service: lambda.amazonaws.com
+               Action: 'sts:AssumeRole'
+         Policies:
+           - PolicyName: LambdaExecutionPolicy
+             PolicyDocument:
+               Version: '2012-10-17'
+               Statement:
+                 - Effect: Allow
+                   Action:
+                     - 'logs:CreateLogGroup'
+                     - 'logs:CreateLogStream'
+                     - 'logs:PutLogEvents'
+                   Resource: '*'
+     LambdaFunction:
+       Type: 'AWS::Lambda::Function'
+       Properties:
+         Handler: src/server.handler
+         Role: !GetAtt LambdaExecutionRole.Arn
+         Code:
+           S3Bucket: YOUR_S3_BUCKET_NAME
+           S3Key: YOUR_S3_KEY
+         Runtime: nodejs14.x
+     ApiGateway:
+       Type: 'AWS::ApiGateway::RestApi'
+       Properties:
+         Name: 'projectrefuge-unsc-mongo-vue-api'
+     ApiGatewayResource:
+       Type: 'AWS::ApiGateway::Resource'
+       Properties:
+         ParentId: !GetAtt ApiGateway.RootResourceId
+         PathPart: '{proxy+}'
+         RestApiId: !Ref ApiGateway
+     ApiGatewayMethod:
+       Type: 'AWS::ApiGateway::Method'
+       Properties:
+         AuthorizationType: 'NONE'
+         HttpMethod: 'ANY'
+         ResourceId: !Ref ApiGatewayResource
+         RestApiId: !Ref ApiGateway
+         Integration:
+           IntegrationHttpMethod: 'POST'
+           Type: 'AWS_PROXY'
+           Uri: !Sub
+             - 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations'
+             - LambdaFunction.Arn: !GetAtt LambdaFunction.Arn
+     LambdaPermission:
+       Type: 'AWS::Lambda::Permission'
+       Properties:
+         Action: 'lambda:InvokeFunction'
+         FunctionName: !Ref LambdaFunction
+         Principal: 'apigateway.amazonaws.com'
    ```
 
-### Step 2: Deploy the Serverless Function
+### Step 2: Deploy the Cloudformation Template
 
-1. Install the Serverless Framework globally:
+1. Package the Cloudformation template:
    ```sh
-   npm install -g serverless
+   aws cloudformation package --template-file cloudformation-template.yml --s3-bucket YOUR_S3_BUCKET_NAME --output-template-file packaged-template.yml
    ```
 
-2. Deploy the function:
+2. Deploy the Cloudformation stack:
    ```sh
-   serverless deploy
+   aws cloudformation deploy --template-file packaged-template.yml --stack-name projectrefuge-unsc-mongo-vue-stack --capabilities CAPABILITY_IAM
    ```
 
 ### Step 3: Update Your Front-End Code
 
 1. Update the API endpoint in your Vue.js application:
-   Replace the `localhost:3000` URL with the URL provided by API Gateway after deploying the serverless function.
+   Replace the `localhost:3000` URL with the URL provided by API Gateway after deploying the Cloudformation stack.
 
 2. Update the `src/App.vue` file to use the new API endpoint:
    ```javascript
