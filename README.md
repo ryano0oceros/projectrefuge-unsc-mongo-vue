@@ -15,6 +15,10 @@ Frontend for ICRC UNSC initiative
    ```yaml
    AWSTemplateFormatVersion: '2010-09-09'
    Resources:
+     InfraBucket:
+       Type: 'AWS::S3::Bucket'
+       Properties:
+         BucketName: 'rf-unsc-icrc-infrabucket'
      LambdaExecutionRole:
        Type: 'AWS::IAM::Role'
        Properties:
@@ -42,7 +46,7 @@ Frontend for ICRC UNSC initiative
          Handler: src/server.handler
          Role: !GetAtt LambdaExecutionRole.Arn
          Code:
-           S3Bucket: YOUR_S3_BUCKET_NAME
+           S3Bucket: rf-unsc-icrc-infrabucket
            S3Key: YOUR_S3_KEY
          Runtime: nodejs14.x
      ApiGateway:
@@ -80,7 +84,7 @@ Frontend for ICRC UNSC initiative
 
 1. Package the Cloudformation template:
    ```sh
-   aws cloudformation package --template-file cloudformation-template.yml --s3-bucket YOUR_S3_BUCKET_NAME --output-template-file packaged-template.yml
+   aws cloudformation package --template-file cloudformation-template.yml --s3-bucket rf-unsc-icrc-infrabucket --output-template-file packaged-template.yml
    ```
 
 2. Deploy the Cloudformation stack:
