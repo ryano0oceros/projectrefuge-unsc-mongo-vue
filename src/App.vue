@@ -16,14 +16,14 @@
       <h2>Search Results</h2>
       <ul>
         <li v-for="result in results" :key="result._id">
-          <div>
-            <p>{{ result.content.split('\n')[0] }}</p>
+          <div class="list-item">
+            <span :class="{ bold: !expandedResults.includes(result._id) }">{{ result.content.split('\n')[0] }}</span>
             <button @click="toggleExpand(result._id)">
               {{ expandedResults.includes(result._id) ? '-' : '+' }}
             </button>
-            <div v-if="expandedResults.includes(result._id)">
-              <p>{{ result.content }}</p>
-            </div>
+          </div>
+          <div v-if="expandedResults.includes(result._id)" class="details">
+            <p>{{ result.content }}</p>
           </div>
         </li>
       </ul>
@@ -74,6 +74,11 @@ body {
   font-family: 'Mona Sans', sans-serif;
   background-color: #f9f9f9;
   color: #333;
+  background-image: url('@/assets/LightB.webp');
+  background-size: 5120px 1874px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 #app {
@@ -118,25 +123,32 @@ li {
   background-color: #fff;
   border: 1px solid #ddd;
   margin-bottom: 5px;
-  padding: 10px;
+  padding: 10px 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
 }
 
-li p {
-  margin: 0;
+.bold {
+  font-weight: bold;
 }
 
-li div {
+.list-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-li div button {
-  margin-left: auto;
+.list-item span {
+  flex-grow: 1; /* Allow the text to take up remaining space */
+  margin-right: 10px; /* Add space between the text and the button */
 }
 
-li div p {
-  flex-grow: 1;
+.details {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-top: 1px solid #ddd;
+  font-weight: normal; /* Ensure the expanded text is not bold */
 }
 
 li div div {
