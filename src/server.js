@@ -17,6 +17,7 @@ app.use(cors());
 
 app.get('/search', async (req, res) => {
     const searchQuery = req.query.q;
+    const limit = parseInt(req.query.limit, 10) || 10; // Default limit to 10 if not provided
     if (!searchQuery) {
         return res.status(400).send('Query parameter "q" is required');
     }
@@ -38,6 +39,9 @@ app.get('/search', async (req, res) => {
                         }
                     }
                 }
+            },
+            {
+                $limit: limit
             }
         ];
 
