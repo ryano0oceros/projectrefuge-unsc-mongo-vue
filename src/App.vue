@@ -49,7 +49,7 @@ export default {
   },
   methods: {
     search() {
-      axios.get(`http://localhost:3000/search?q=${this.query}&limit=${this.limit}`)
+      axios.get(`https://<api-gateway-url>/search?q=${this.query}&limit=${this.limit}`)
         .then(response => {
           this.results = response.data;
           this.searched = true;
