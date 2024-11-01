@@ -1,6 +1,7 @@
 <template>
   <div id="app">
-    <h1>ICRC UNSC</h1>
+    <h1>UNSC Resolution Lookup</h1>
+    <h2>A collaboration between ICRC and GitHub</h2>
     <form @submit.prevent="search">
       <input type="text" v-model="query" placeholder="Enter search query" />
       <button type="submit">Search</button>
@@ -18,7 +19,7 @@
           <div>
             <p>{{ result.content.split('\n')[0] }}</p>
             <button @click="toggleExpand(result._id)">
-              {{ expandedResults.includes(result._id) ? 'Collapse' : 'Expand' }}
+              {{ expandedResults.includes(result._id) ? '-' : '+' }}
             </button>
             <div v-if="expandedResults.includes(result._id)">
               <p>{{ result.content }}</p>
@@ -70,9 +71,17 @@ export default {
 
 <style>
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Mona Sans', sans-serif;
   background-color: #f9f9f9;
   color: #333;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80%;
+  margin: 0 auto;
 }
 
 h1 {
@@ -96,6 +105,10 @@ select {
   padding: 5px;
 }
 
+input, button, select {
+  font-size: 1.2em;
+}
+
 ul {
   list-style-type: none;
   padding: 0;
@@ -116,5 +129,20 @@ li div {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+li div button {
+  margin-left: auto;
+}
+
+li div p {
+  flex-grow: 1;
+}
+
+li div div {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f1f1f1;
+  border: 1px solid #ddd;
 }
 </style>
