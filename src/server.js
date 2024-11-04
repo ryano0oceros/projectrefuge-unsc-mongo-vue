@@ -59,6 +59,7 @@ app.get('/search', async (req, res) => {
             results.forEach(doc => console.log(doc));
         }
 
+        res.setHeader('Access-Control-Allow-Origin', '*'); // P755c
         res.json(results);
     } catch (error) {
         console.error(error);
