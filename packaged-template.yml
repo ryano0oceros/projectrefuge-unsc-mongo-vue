@@ -65,7 +65,7 @@ Resources:
     Type: 'AWS::ApiGatewayV2::Route'
     Properties:
       ApiId: !Ref ApiGatewayV2
-      RouteKey: 'ANY /{proxy+}'
+      RouteKey: 'ANY /search'
       Target: !Sub 'integrations/${ApiGatewayV2Integration}'
 
   ApiGatewayV2Stage:
