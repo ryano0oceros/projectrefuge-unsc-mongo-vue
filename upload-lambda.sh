@@ -12,10 +12,17 @@ mkdir -p $LAMBDA_FUNCTION_DIR
 # Copy server.js to the lambda directory
 cp server.js $LAMBDA_FUNCTION_DIR/
 
+# Copy package.json and package-lock.json to the lambda directory
+cp package.json $LAMBDA_FUNCTION_DIR/
+cp package-lock.json $LAMBDA_FUNCTION_DIR/
+
 # Navigate to the lambda directory
 cd $LAMBDA_FUNCTION_DIR
 
-# Zip the Lambda function code
+# Install node modules
+npm install --production
+
+# Zip the Lambda function code along with node_modules
 zip -r $ZIP_FILE .
 
 # Upload the ZIP file to S3

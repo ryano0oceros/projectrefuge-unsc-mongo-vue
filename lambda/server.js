@@ -15,6 +15,7 @@ const client = new MongoClient(uri, {
 });
 
 app.use(cors());
+app.use(express.json()); // Middleware to parse JSON bodies
 
 app.get('/search', async (req, res) => {
     const searchQuery = req.query.q;

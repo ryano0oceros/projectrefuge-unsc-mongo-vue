@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  LambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+
+  LambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Handler: server.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: rf-unsc-icrc-infrabucket
+        S3Key: function.zip
+      Runtime: nodejs18.x
+      Timeout: 30
+
+  ApiGatewayV2:
+    Type: 'AWS::ApiGatewayV2::Api'
+    Properties:
+      Name: 'projectrefuge-unsc-mongo-vue-api'
+      ProtocolType: 'HTTP'
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - 'OPTIONS'
+          - 'GET'
+          - 'POST'
+          - 'PUT'
+          - 'DELETE'
+        AllowHeaders:
+          - 'Content-Type'
+          - 'Authorization'
+
+  ApiGatewayV2Integration:
+    Type: 'AWS::ApiGatewayV2::Integration'
+    Properties:
+      ApiId: !Ref ApiGatewayV2
+      IntegrationType: 'AWS_PROXY'
+      IntegrationUri: !Sub
+        - 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunctionArn}/invocations'
+        - LambdaFunctionArn: !GetAtt LambdaFunction.Arn
+      PayloadFormatVersion: '2.0'
+
+  ApiGatewayV2Route:
+    Type: 'AWS::ApiGatewayV2::Route'
+    Properties:
+      ApiId: !Ref ApiGatewayV2
+      RouteKey: 'ANY /{proxy+}'
+      Target: !Sub 'integrations/${ApiGatewayV2Integration}'
+
+  ApiGatewayV2Stage:
+    Type: 'AWS::ApiGatewayV2::Stage'
+    Properties:
+      ApiId: !Ref ApiGatewayV2
+      StageName: 'prod'
+      AutoDeploy: true
+
+  LambdaPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref LambdaFunction
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayV2.ApiId}/*/*'
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL for Prod environment"
+    Value: !Sub "https://${ApiGatewayV2}.execute-api.${AWS::Region}.amazonaws.com/prod"
