@@ -30,6 +30,7 @@ Resources:
         S3Bucket: rf-unsc-icrc-infrabucket
         S3Key: function.zip
       Runtime: nodejs18.x
+      Timeout: 30
   ApiGateway:
     Type: 'AWS::ApiGateway::RestApi'
     Properties:
@@ -53,6 +54,29 @@ Resources:
         Uri: !Sub
           - 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunctionArn}/invocations'
           - LambdaFunctionArn: !GetAtt LambdaFunction.Arn
+  ApiGatewayOptionsMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      AuthorizationType: 'NONE'
+      HttpMethod: 'OPTIONS'
+      ResourceId: !Ref ApiGatewayResource
+      RestApiId: !Ref ApiGateway
+      Integration:
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,GET,POST,PUT,DELETE'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: 'MOCK'
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
   LambdaPermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
