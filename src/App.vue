@@ -49,7 +49,7 @@ export default {
   },
   methods: {
     search() {
-      axios.get(`https://1c33asy3h5.execute-api.us-east-1.amazonaws.com/prod/search?q=${this.query}&limit=${this.limit}`)
+      axios.get(`https://cbi2zh5gz9.execute-api.us-east-1.amazonaws.com/prod/search?q=${this.query}&limit=${this.limit}`)
         .then(response => {
           this.results = response.data;
           this.searched = true;
