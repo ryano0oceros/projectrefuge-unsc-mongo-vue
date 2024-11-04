@@ -28,7 +28,7 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
         S3Bucket: rf-unsc-icrc-infrabucket
-        S3Key: YOUR_S3_KEY
+        S3Key: function.zip
       Runtime: nodejs14.x
   ApiGateway:
     Type: 'AWS::ApiGateway::RestApi'
@@ -59,3 +59,7 @@ Resources:
       Action: 'lambda:InvokeFunction'
       FunctionName: !Ref LambdaFunction
       Principal: 'apigateway.amazonaws.com'
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL for Prod environment"
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod"
