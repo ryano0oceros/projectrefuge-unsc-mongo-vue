@@ -1,76 +1,96 @@
-const express = require('express');
 const { MongoClient } = require('mongodb');
-const cors = require('cors');
-const serverless = require('serverless-http');
 
-const app = express();
-const port = 3000;
-
-// Replace the uri string with your MongoDB Atlas connection string.
 const uri = "mongodb+srv://admin:ScVuXOQydQ7gpgLo@unsc-mongo-demo.sppir.mongodb.net/?retryWrites=true&w=majority&ssl=true&appName=unsc-mongo-demo";
 
 const client = new MongoClient(uri, {
     tls: true,
-    tlsAllowInvalidCertificates: false
+    tlsAllowInvalidCertificates: false,
 });
 
-app.use(cors());
+exports.handler = async (event, context) => {
+    console.log('Incoming event:', JSON.stringify(event, null, 2));
 
-app.get('/search', async (req, res) => {
-    const searchQuery = req.query.q;
-    const limit = parseInt(req.query.limit, 10) || 10; // Default limit to 10 if not provided
-    if (!searchQuery) {
-        return res.status(400).send('Query parameter "q" is required');
+    // Extract HTTP method, raw path, and raw query string
+    const httpMethod = event.requestContext.http.method;
+    const rawPath = event.rawPath;
+    let rawQueryString = event.rawQueryString;
+
+    console.log('Raw path:', rawPath);
+    console.log('Raw query string:', rawQueryString);
+
+    // Ensure the path matches the expected route
+    if (httpMethod !== 'GET' || rawPath !== '/prod/search') {
+        console.log(`Unexpected path: ${rawPath}`);
+        return {
+            statusCode: 404,
+            headers: {
+                'Content-Type': 'text/html',
+            },
+            body: `<h1>Cannot GET ${rawPath || 'undefined'}</h1>`,
+        };
     }
 
+    // Clean the rawQueryString
+    if (rawQueryString.startsWith('q=')) {
+        rawQueryString = rawQueryString.slice(2); // Remove 'q='
+    }
+    rawQueryString = rawQueryString.replace(/%20/g, ' '); // Replace '%20' with spaces
+    rawQueryString = rawQueryString.replace(/&limit=\d+/, ''); // Remove '&limit=10'
+
+    const searchQuery = rawQueryString.trim();
+
+    if (!searchQuery) {
+        console.log('Cleaned query string is empty');
+        return {
+            statusCode: 400,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ error: 'Query parameter is required' }),
+        };
+    }
+
+    console.log('Search query after cleaning:', searchQuery);
+
     try {
+        console.log('Connecting to MongoDB...');
         await client.connect();
+        console.log('Connected to MongoDB');
+
         const database = client.db('unsc-mongo-demo');
         const embeddings = database.collection('embeddings');
 
-        // Define the aggregation pipeline
         const pipeline = [
             {
                 $search: {
                     index: "default",
                     text: {
                         query: searchQuery,
-                        path: {
-                            wildcard: "*"
-                        }
-                    }
-                }
+                        path: { wildcard: "*" },
+                    },
+                },
             },
-            {
-                $limit: limit
-            }
+            { $limit: 50 },
         ];
 
-        // Execute aggregation
-        const cursor = embeddings.aggregate(pipeline);
+        console.log('Aggregation pipeline:', JSON.stringify(pipeline, null, 2));
+        const results = await embeddings.aggregate(pipeline).toArray();
+        console.log(`Number of documents found: ${results.length}`);
 
-        // Convert cursor to array
-        const results = await cursor.toArray();
-
-        // Print a message if no documents were found
-        if (results.length === 0) {
-            console.log("No documents found!");
-        } else {
-            results.forEach(doc => console.log(doc));
-        }
-
-        res.setHeader('Access-Control-Allow-Origin', '*'); // P755c
-        res.json(results);
+        return {
+            statusCode: 200,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(results),
+        };
     } catch (error) {
-        console.error(error);
-        res.status(500).send(`Error connecting to the database: ${error.message}`);
+        console.error('Error during MongoDB operation:', error);
+        return {
+            statusCode: 500,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ error: `Error connecting to the database: ${error.message}` }),
+        };
     } finally {
+        console.log('Closing MongoDB connection');
         await client.close();
     }
-});
-
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-});
-
-module.exports.handler = serverless(app);
+};
