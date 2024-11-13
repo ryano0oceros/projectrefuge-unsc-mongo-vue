@@ -84,7 +84,7 @@ body {
   font-family: 'Mona Sans', sans-serif;
   background-color: #f9f9f9;
   color: #333;
-  background-image: url('@/assets/LightB.webp');
+  background-image: url('@/assets/LightB.png');
   background-size: 2560px 937px;
   background-position: center;
   background-repeat: no-repeat;
