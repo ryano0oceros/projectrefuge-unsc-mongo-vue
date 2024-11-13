@@ -13,7 +13,7 @@ exports.handler = async (event, context) => {
     // Extract HTTP method, raw path, and raw query string
     const httpMethod = event.requestContext.http.method;
     const rawPath = event.rawPath;
-    const rawQueryString = event.rawQueryString;
+    let rawQueryString = event.rawQueryString;
 
     console.log('Raw path:', rawPath);
     console.log('Raw query string:', rawQueryString);
@@ -30,10 +30,17 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // Use the rawQueryString directly as the search query
-    const searchQuery = rawQueryString;
+    // Clean the rawQueryString
+    if (rawQueryString.startsWith('q=')) {
+        rawQueryString = rawQueryString.slice(2); // Remove 'q='
+    }
+    rawQueryString = rawQueryString.replace(/%20/g, ' '); // Replace '%20' with spaces
+    rawQueryString = rawQueryString.replace(/&limit=\d+/, ''); // Remove '&limit=10'
+
+    const searchQuery = rawQueryString.trim();
+
     if (!searchQuery) {
-        console.log('Missing raw query string');
+        console.log('Cleaned query string is empty');
         return {
             statusCode: 400,
             headers: {
@@ -42,6 +49,8 @@ exports.handler = async (event, context) => {
             body: JSON.stringify({ error: 'Query parameter is required' }),
         };
     }
+
+    console.log('Search query after cleaning:', searchQuery);
 
     try {
         console.log('Connecting to MongoDB...');
