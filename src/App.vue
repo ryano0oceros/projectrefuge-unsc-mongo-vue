@@ -1,13 +1,12 @@
 <template>
   <div id="app">
     <h1>UNSC Resolution Lookup</h1>
-    <img src="@/assets/GHxICRC.png" alt="Center Image" class="center-image"/>
     <img v-if="!isMobile" src="@/assets/GHxICRC.png" alt="Center Image" class="center-image"/>
     <h2 v-if="!isMobile"></h2>
     <h2 v-if="!isMobile"></h2>
     <h2 v-if="!isMobile"></h2>
     <h2 v-if="!isMobile"></h2>
-    <h2>A collaboration between ICRC and GitHub</h2>
+    <h2 v-if="!isMobile">A collaboration between ICRC and GitHub</h2>
     <form @submit.prevent="search">
       <input type="text" v-model="query" placeholder="Enter search query" />
       <button type="submit">Search</button>
@@ -49,8 +48,9 @@ export default {
       query: '',
       results: [],
       searched: false,
-      limit: 10,
+      limit: 50,
       expandedResults: [],
+      isMobile: false,
     };
   },
   computed: {
@@ -76,6 +76,13 @@ export default {
         this.expandedResults.push(id);
       }
     },
+    checkIfMobile() {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      this.isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+    },
+  },
+  mounted() {
+    this.checkIfMobile();
   },
 };
 </script>
@@ -107,6 +114,7 @@ h1 {
   color: #24292e;
   position: relative;
   z-index: 1; /* Ensure the title is above the image */
+  text-align: center; /* Center align the title */
 }
 
 .center-image {
@@ -124,6 +132,7 @@ h2 {
   color: #24292e;
   position: relative;
   z-index: 1; /* Ensure the subtitle is above the image */
+  text-align: center; /* Center align the subtitle */
 }
 
 button {
@@ -150,13 +159,14 @@ input, button, select {
 ul {
   list-style-type: none;
   padding: 0;
+  width: 100%; /* Ensure the list takes full width on mobile */
 }
 
 li {
   background-color: #fff;
   border: 1px solid #ddd;
-  margin-bottom: 5px;
-  padding: 10px 20px;
+  margin-bottom: 10px; /* Increased margin for better spacing on mobile */
+  padding: 15px; /* Increased padding for better touch experience */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border-radius: 5px;
 }
@@ -169,12 +179,13 @@ li {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap; /* Allow items to wrap on smaller screens */
 }
 
 .list-item span {
   flex-grow: 1; /* Allow the text to take up remaining space */
   margin-right: 10px; /* Add space between the text and the button */
-  font-size: 1.2em; /* Consistent font size for search results */
+  font-size: 1em; /* Consistent font size for search results */
 }
 
 .details {
@@ -194,5 +205,33 @@ li div div {
 
 .resolution-number {
   font-weight: bold; /* Bold font weight for the resolution number */
+}
+
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.5em; /* Smaller font size for the title on mobile */
+  }
+
+  h2 {
+    font-size: 1em; /* Smaller font size for the subtitle on mobile */
+  }
+
+  .center-image {
+    top: 30px; /* Adjust the overlap for smaller screens */
+    max-width: 70%; /* Adjust the size of the image for smaller screens */
+  }
+
+  button, select, input {
+    font-size: 0.9em; /* Adjusted font size for better readability on mobile */
+    padding: 8px 15px; /* Adjusted padding for touch-friendly elements */
+  }
+
+  li {
+    padding: 10px; /* Adjusted padding for better touch experience on mobile */
+  }
+
+  .list-item span {
+    font-size: 0.9em; /* Adjusted font size for search results on mobile */
+  }
 }
 </style>
