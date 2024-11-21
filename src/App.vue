@@ -1,12 +1,11 @@
 <template>
   <div id="app">
-    <h1>UNSC Resolution Lookup</h1>
+    <h1>UN Resolution Lookup</h1>
     <img v-if="!isMobile" src="@/assets/GHxICRC.png" alt="Center Image" class="center-image"/>
     <h2 v-if="!isMobile"></h2>
     <h2 v-if="!isMobile"></h2>
     <h2 v-if="!isMobile"></h2>
-    <h2 v-if="!isMobile"></h2>
-    <h2 v-if="!isMobile">A collaboration between ICRC and GitHub</h2>
+    <h2 v-if="!isMobile">An OSS tool for searching UN Resolutions</h2>
     <form @submit.prevent="search">
       <input type="text" v-model="query" placeholder="Enter search query" />
       <button type="submit">Search</button>
